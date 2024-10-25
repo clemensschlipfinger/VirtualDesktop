@@ -17,7 +17,7 @@ using System.Reflection;
 [assembly:AssemblyConfiguration("")]
 [assembly:AssemblyCompany("MS")]
 [assembly:AssemblyProduct("VirtualDesktop")]
-[assembly:AssemblyCopyright("© Markus Scholtes 2024")]
+[assembly:AssemblyCopyright("ï¿½ Markus Scholtes 2024")]
 [assembly:AssemblyTrademark("")]
 [assembly:AssemblyCulture("")]
 [assembly:AssemblyVersion("1.19.0.0")]
@@ -647,6 +647,11 @@ Console.WriteLine("Name of desktop: " + desktopName);
 			}
 		}
 
+		public void PinActiveWindow()
+		{ 	// pin active window to all desktop
+			PinWindow(GetForegroundWindow());
+		}
+
 		public static void UnpinWindow(IntPtr hWnd)
 		{ // unpin window from all desktops
 			if (hWnd == IntPtr.Zero) throw new ArgumentNullException();
@@ -655,6 +660,11 @@ Console.WriteLine("Name of desktop: " + desktopName);
 			{ // unpin only if not already unpinned
 				DesktopManager.VirtualDesktopPinnedApps.UnpinView(view);
 			}
+		}
+
+		public void UnpinActiveWindow()
+		{ 	// unpin active window to all desktop
+			UnpinWindow(GetForegroundWindow());
 		}
 
 		public static bool IsApplicationPinned(IntPtr hWnd)
@@ -981,6 +991,36 @@ namespace VDeskTool
 							case "WK":
 								if (verbose) Console.WriteLine("Press a key");
 								Console.ReadKey(true);
+								break;
+
+							case "PINACTIVEWINDOW": 
+							case "PAW":
+								if (verbose) Console.WriteLine("Pin active window to all desktop");
+								try
+								{ // move active window
+									VirtualDesktop.Desktop.FromIndex(rc).PinActiveWindow();
+									if (verbose) Console.WriteLine("Active window pinned");
+								}
+								catch
+								{ // error while moving
+									if (verbose) Console.WriteLine("No active window or pinning failed");
+									rc = -1;
+								}
+								break;
+
+							case "UNPINACTIVEWINDOW": 
+							case "UPAW":
+								if (verbose) Console.WriteLine("Unpin active window to all desktop");
+								try
+								{ 
+									VirtualDesktop.Desktop.FromIndex(rc).UnpinActiveWindow();
+									if (verbose) Console.WriteLine("Active window unpinned");
+								}
+								catch
+								{ 
+									if (verbose) Console.WriteLine("No active window or unpinning failed");
+									rc = -1;
+								}
 								break;
 
 							default:
@@ -2022,6 +2062,7 @@ namespace VDeskTool
 								}
 								break;
 
+
 							case "UNPINWINDOW": // unpin window from all desktops
 							case "UPW":
 								if (int.TryParse(groups[2].Value, out iParam))
@@ -2097,6 +2138,7 @@ namespace VDeskTool
 									}
 								}
 								break;
+
 
 							case "ISAPPLICATIONPINNED": // is application pinned to all desktops
 							case "IAP":
@@ -2586,10 +2628,14 @@ namespace VDeskTool
 			Console.WriteLine("                   (short: /pw).");
 			Console.WriteLine("/PinWindowHandle:<s|n>  pin window with text <s> in title or handle <n> to all");
 			Console.WriteLine("                   desktops (short: /pwh).");
+			Console.WriteLine("/PinAcitveWindow  pin active window");
+			Console.WriteLine("                   desktops (short: /paw).");
 			Console.WriteLine("/UnPinWindow:<s|n>  unpin process with name <s> or id <n> from all desktops");
 			Console.WriteLine("                   (short: /upw).");
 			Console.WriteLine("/UnPinWindowHandle:<s|n>  unpin window with text <s> in title or handle <n>");
 			Console.WriteLine("                   from all desktops (short: /upwh).");
+			Console.WriteLine("/UnPinAcitveWindow  unpin active window");
+			Console.WriteLine("                   desktops (short: /upaw).");
 			Console.WriteLine("/IsWindowPinned:<s|n>  check if process with name <s> or id <n> is pinned to");
 			Console.WriteLine("                   all desktops (short: /iwp). Returns 0 for yes, 1 for no.");
 			Console.WriteLine("/IsWindowHandlePinned:<s|n>  check if window with text <s> in title or handle");
